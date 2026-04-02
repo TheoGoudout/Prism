@@ -4,6 +4,10 @@
   "workspaces": [
     "frontend"
   ],
+  "overrides": {
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3"
+  },
   "scripts": {
     "dev": "bun run --filter frontend dev",
     "lint": "bun run --filter frontend lint",
