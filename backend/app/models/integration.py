@@ -98,6 +98,8 @@ class PlatformAccount(SQLModel, table=True):
 
     integration: Integration | None = Relationship(back_populates="accounts")
     workspace: Workspace | None = Relationship(back_populates="platform_accounts")
+    metric_snapshots: list["MetricSnapshot"] = Relationship(back_populates="platform_account", cascade_delete=True)  # type: ignore[name-defined]
+    posts: list["Post"] = Relationship(back_populates="platform_account", cascade_delete=True)  # type: ignore[name-defined]
 
 
 # ---------------------------------------------------------------------------

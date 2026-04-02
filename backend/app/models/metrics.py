@@ -1,0 +1,242 @@
+import uuid
+from datetime import date as date_type
+from datetime import datetime
+from enum import Enum
+from typing import Any
+
+from sqlalchemy import Column, Date, UniqueConstraint
+from sqlalchemy import DateTime as SADateTime
+from sqlalchemy.types import JSON
+from sqlmodel import Field, Relationship, SQLModel
+
+from app.models.common import get_datetime_utc
+from app.models.integration import PlatformAccount
+
+
+class ContentType(str, Enum):
+    post = "post"
+    reel = "reel"
+    story = "story"
+    video = "video"
+    tweet = "tweet"
+    article = "article"
+    short = "short"
+
+
+# ---------------------------------------------------------------------------
+# MetricSnapshot — one row per (platform_account, date)
+# ---------------------------------------------------------------------------
+
+
+class MetricSnapshot(SQLModel, table=True):
+    """
+    Daily aggregate metrics for a platform account.
+    Weekly / monthly views are computed on-the-fly by summing/averaging
+    over date ranges — no separate rollup tables needed.
+    """
+
+    __tablename__ = "metricsnapshot"
+    __table_args__ = (
+        UniqueConstraint(
+            "platform_account_id", "date", name="uq_metricsnapshot_account_date"
+        ),
+    )
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    platform_account_id: uuid.UUID = Field(
+        foreign_key="platformaccount.id", nullable=False, ondelete="CASCADE", index=True
+    )
+    date: date_type = Field(sa_column=Column(Date, nullable=False))
+
+    # --- Audience ---
+    followers_count: int | None = Field(default=None)
+    followers_gained: int | None = Field(default=None)
+    followers_lost: int | None = Field(default=None)
+
+    # --- Content activity ---
+    posts_count: int | None = Field(default=None)
+
+    # --- Reach & visibility ---
+    impressions: int | None = Field(default=None)
+    reach: int | None = Field(default=None)
+    views: int | None = Field(default=None)
+
+    # --- Engagement ---
+    engagements: int | None = Field(default=None)
+    likes: int | None = Field(default=None)
+    comments: int | None = Field(default=None)
+    shares: int | None = Field(default=None)
+    clicks: int | None = Field(default=None)
+    saves: int | None = Field(default=None)
+
+    # --- Calculated (stored for fast retrieval) ---
+    engagement_rate: float | None = Field(default=None)
+
+    # --- Platform-specific overflow ---
+    raw_data: dict[str, Any] | None = Field(
+        default=None, sa_column=Column(JSON, nullable=True)
+    )
+
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_column=Column(SADateTime(timezone=True), nullable=True),
+    )
+
+    platform_account: PlatformAccount | None = Relationship(
+        back_populates="metric_snapshots"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Post — one row per published post / reel / story / tweet / etc.
+# ---------------------------------------------------------------------------
+
+
+class Post(SQLModel, table=True):
+    """Per-post metrics synced from each platform."""
+
+    __table_args__ = (
+        UniqueConstraint(
+            "platform_account_id", "external_id", name="uq_post_account_external_id"
+        ),
+    )
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    platform_account_id: uuid.UUID = Field(
+        foreign_key="platformaccount.id", nullable=False, ondelete="CASCADE", index=True
+    )
+    external_id: str = Field(max_length=255)
+    published_at: datetime = Field(
+        sa_column=Column(SADateTime(timezone=True), nullable=False)
+    )
+    content_type: ContentType
+
+    # --- Content snapshot ---
+    text: str | None = Field(default=None)
+    media_url: str | None = Field(default=None, max_length=2048)
+    permalink: str | None = Field(default=None, max_length=2048)
+
+    # --- Metrics ---
+    impressions: int | None = Field(default=None)
+    reach: int | None = Field(default=None)
+    views: int | None = Field(default=None)
+    engagements: int | None = Field(default=None)
+    likes: int | None = Field(default=None)
+    comments: int | None = Field(default=None)
+    shares: int | None = Field(default=None)
+    clicks: int | None = Field(default=None)
+    saves: int | None = Field(default=None)
+    engagement_rate: float | None = Field(default=None)
+
+    # --- Platform-specific overflow ---
+    raw_data: dict[str, Any] | None = Field(
+        default=None, sa_column=Column(JSON, nullable=True)
+    )
+
+    synced_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_column=Column(SADateTime(timezone=True), nullable=True),
+    )
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_column=Column(SADateTime(timezone=True), nullable=True),
+    )
+
+    platform_account: PlatformAccount | None = Relationship(back_populates="posts")
+
+
+# ---------------------------------------------------------------------------
+# Pydantic schemas
+# ---------------------------------------------------------------------------
+
+
+class MetricSnapshotPublic(SQLModel):
+    id: uuid.UUID
+    platform_account_id: uuid.UUID
+    date: date_type
+    followers_count: int | None = None
+    followers_gained: int | None = None
+    followers_lost: int | None = None
+    posts_count: int | None = None
+    impressions: int | None = None
+    reach: int | None = None
+    views: int | None = None
+    engagements: int | None = None
+    likes: int | None = None
+    comments: int | None = None
+    shares: int | None = None
+    clicks: int | None = None
+    saves: int | None = None
+    engagement_rate: float | None = None
+
+
+class MetricSnapshotsPublic(SQLModel):
+    data: list[MetricSnapshotPublic]
+    count: int
+
+
+class PostPublic(SQLModel):
+    id: uuid.UUID
+    platform_account_id: uuid.UUID
+    external_id: str
+    published_at: datetime
+    content_type: ContentType
+    text: str | None = None
+    media_url: str | None = None
+    permalink: str | None = None
+    impressions: int | None = None
+    reach: int | None = None
+    views: int | None = None
+    engagements: int | None = None
+    likes: int | None = None
+    comments: int | None = None
+    shares: int | None = None
+    clicks: int | None = None
+    saves: int | None = None
+    engagement_rate: float | None = None
+
+
+class PostsPublic(SQLModel):
+    data: list[PostPublic]
+    count: int
+
+
+class MetricSnapshotUpsert(SQLModel):
+    """Used internally by sync tasks — not exposed via the API."""
+
+    date: date_type
+    followers_count: int | None = None
+    followers_gained: int | None = None
+    followers_lost: int | None = None
+    posts_count: int | None = None
+    impressions: int | None = None
+    reach: int | None = None
+    views: int | None = None
+    engagements: int | None = None
+    likes: int | None = None
+    comments: int | None = None
+    shares: int | None = None
+    clicks: int | None = None
+    saves: int | None = None
+    raw_data: dict[str, Any] | None = None
+
+
+class PostUpsert(SQLModel):
+    """Used internally by sync tasks — not exposed via the API."""
+
+    external_id: str
+    published_at: datetime
+    content_type: ContentType
+    text: str | None = None
+    media_url: str | None = None
+    permalink: str | None = None
+    impressions: int | None = None
+    reach: int | None = None
+    views: int | None = None
+    engagements: int | None = None
+    likes: int | None = None
+    comments: int | None = None
+    shares: int | None = None
+    clicks: int | None = None
+    saves: int | None = None
+    raw_data: dict[str, Any] | None = None

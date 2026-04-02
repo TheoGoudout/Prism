@@ -1,3 +1,12 @@
+from app.crud.metrics import (
+    get_latest_snapshot,
+    get_posts,
+    get_snapshots,
+    get_snapshots_for_accounts,
+    get_top_posts,
+    upsert_metric_snapshot,
+    upsert_post,
+)
 from app.crud.integration import (
     create_integration,
     create_platform_account,
@@ -36,6 +45,14 @@ __all__ = [
     "create_user",
     "get_user_by_email",
     "update_user",
+    # metrics
+    "get_latest_snapshot",
+    "get_posts",
+    "get_snapshots",
+    "get_snapshots_for_accounts",
+    "get_top_posts",
+    "upsert_metric_snapshot",
+    "upsert_post",
     # integration
     "create_integration",
     "create_platform_account",

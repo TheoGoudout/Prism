@@ -11,6 +11,17 @@ from app.models.user import (
     UserUpdate,
     UserUpdateMe,
 )
+from app.models.metrics import (
+    ContentType,
+    MetricSnapshot,
+    MetricSnapshotPublic,
+    MetricSnapshotsPublic,
+    MetricSnapshotUpsert,
+    Post,
+    PostPublic,
+    PostsPublic,
+    PostUpsert,
+)
 from app.models.integration import (
     Integration,
     IntegrationCreate,
@@ -65,6 +76,16 @@ __all__ = [
     "ItemPublic",
     "ItemsPublic",
     "ItemUpdate",
+    # metrics
+    "ContentType",
+    "MetricSnapshot",
+    "MetricSnapshotPublic",
+    "MetricSnapshotsPublic",
+    "MetricSnapshotUpsert",
+    "Post",
+    "PostPublic",
+    "PostsPublic",
+    "PostUpsert",
     # integration
     "Integration",
     "IntegrationCreate",
