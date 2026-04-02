@@ -13,7 +13,11 @@ celery_app = Celery(
     "prism",
     broker=settings.REDIS_URL,
     backend=settings.REDIS_URL.replace("/0", "/1"),  # separate DB for results
-    include=["app.worker.tasks.sync"],
+    include=[
+        "app.worker.tasks.sync",
+        # Platform sync modules — each registers itself via register_platform_sync
+        "app.integrations.platforms.facebook",
+    ],
 )
 
 celery_app.conf.update(
