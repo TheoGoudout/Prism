@@ -20,6 +20,7 @@ celery_app = Celery(
         "app.integrations.platforms.instagram",
         "app.integrations.platforms.twitter",
         "app.integrations.platforms.linkedin",
+        "app.integrations.platforms.tiktok",
     ],
 )
 
