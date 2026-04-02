@@ -18,6 +18,7 @@ celery_app = Celery(
         # Platform sync modules — each registers itself via register_platform_sync
         "app.integrations.platforms.facebook",
         "app.integrations.platforms.instagram",
+        "app.integrations.platforms.twitter",
     ],
 )
 
