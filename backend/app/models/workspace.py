@@ -31,6 +31,8 @@ class Workspace(SQLModel, table=True):
     members: list["WorkspaceMember"] = Relationship(
         back_populates="workspace", cascade_delete=True
     )
+    integrations: list["Integration"] = Relationship(back_populates="workspace", cascade_delete=True)  # type: ignore[name-defined]
+    platform_accounts: list["PlatformAccount"] = Relationship(back_populates="workspace", cascade_delete=True)  # type: ignore[name-defined]
 
 
 class WorkspaceMember(SQLModel, table=True):

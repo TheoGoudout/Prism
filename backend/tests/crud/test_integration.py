@@ -1,0 +1,196 @@
+"""Unit tests for integration CRUD helpers that aren't reachable via HTTP yet."""
+from sqlmodel import Session
+
+from app.crud import integration as icrud
+from app.models.integration import IntegrationCreate, Platform, PlatformAccountCreate
+from tests.utils.integration import create_fake_integration
+from tests.utils.user import create_random_user
+from tests.utils.workspace import create_random_workspace
+
+
+def _make_workspace(db: Session):  # type: ignore[no-untyped-def]
+    user = create_random_user(db)
+    return create_random_workspace(db, user)
+
+
+def test_update_integration_tokens(db: Session) -> None:
+    ws = _make_workspace(db)
+    integration = create_fake_integration(db, ws)
+
+    updated = icrud.update_integration_tokens(
+        session=db,
+        integration=integration,
+        access_token="new-access",
+        refresh_token="new-refresh",
+    )
+    assert icrud.get_access_token(updated) == "new-access"
+    assert icrud.get_refresh_token(updated) == "new-refresh"
+
+
+def test_update_integration_tokens_no_refresh(db: Session) -> None:
+    ws = _make_workspace(db)
+    integration = create_fake_integration(db, ws)
+    old_refresh = icrud.get_refresh_token(integration)
+
+    updated = icrud.update_integration_tokens(
+        session=db,
+        integration=integration,
+        access_token="new-access-only",
+    )
+    # Refresh token unchanged when not provided
+    assert icrud.get_access_token(updated) == "new-access-only"
+    assert icrud.get_refresh_token(updated) == old_refresh
+
+
+def test_mark_integration_error(db: Session) -> None:
+    ws = _make_workspace(db)
+    integration = create_fake_integration(db, ws)
+
+    from app.models.integration import IntegrationStatus
+
+    errored = icrud.mark_integration_error(
+        session=db, integration=integration, error="rate limit exceeded"
+    )
+    assert errored.status == IntegrationStatus.error
+    assert errored.sync_error == "rate limit exceeded"
+
+
+def test_mark_integration_error_truncates_long_message(db: Session) -> None:
+    ws = _make_workspace(db)
+    integration = create_fake_integration(db, ws)
+    long_error = "x" * 2000
+
+    errored = icrud.mark_integration_error(
+        session=db, integration=integration, error=long_error
+    )
+    assert len(errored.sync_error or "") == 1024  # type: ignore[arg-type]
+
+
+def test_mark_integration_synced(db: Session) -> None:
+    ws = _make_workspace(db)
+    integration = create_fake_integration(db, ws)
+    # First mark as error, then mark synced to verify it clears the error
+    icrud.mark_integration_error(session=db, integration=integration, error="oops")
+
+    synced = icrud.mark_integration_synced(session=db, integration=integration)
+    assert synced.last_synced_at is not None
+    assert synced.sync_error is None
+
+
+def test_get_access_token_none_when_not_set(db: Session) -> None:
+    ws = _make_workspace(db)
+    integration = create_fake_integration(db, ws)
+    integration.access_token_encrypted = None
+
+    assert icrud.get_access_token(integration) is None
+
+
+def test_get_refresh_token_none_when_not_set(db: Session) -> None:
+    ws = _make_workspace(db)
+    integration = create_fake_integration(db, ws)
+    integration.refresh_token_encrypted = None
+
+    assert icrud.get_refresh_token(integration) is None
+
+
+def test_get_accounts_for_workspace(db: Session) -> None:
+    ws = _make_workspace(db)
+    integration = create_fake_integration(db, ws)
+
+    icrud.create_platform_account(
+        session=db,
+        account_in=PlatformAccountCreate(
+            integration_id=integration.id,
+            workspace_id=ws.id,
+            platform=Platform.facebook,
+            external_id="page-ws-1",
+            name="WS Account",
+        ),
+    )
+    accounts = icrud.get_accounts_for_workspace(session=db, workspace_id=ws.id)
+    assert len(accounts) == 1
+    assert accounts[0].external_id == "page-ws-1"
+
+
+def test_get_accounts_for_workspace_platform_filter(db: Session) -> None:
+    ws = _make_workspace(db)
+    fb = create_fake_integration(db, ws, platform=Platform.facebook)
+    ig = create_fake_integration(db, ws, platform=Platform.instagram, external_account_id="ig-2")
+
+    icrud.create_platform_account(
+        session=db,
+        account_in=PlatformAccountCreate(
+            integration_id=fb.id,
+            workspace_id=ws.id,
+            platform=Platform.facebook,
+            external_id="fb-page",
+            name="FB Page",
+        ),
+    )
+    icrud.create_platform_account(
+        session=db,
+        account_in=PlatformAccountCreate(
+            integration_id=ig.id,
+            workspace_id=ws.id,
+            platform=Platform.instagram,
+            external_id="ig-profile",
+            name="IG Profile",
+        ),
+    )
+
+    fb_accounts = icrud.get_accounts_for_workspace(
+        session=db, workspace_id=ws.id, platform=Platform.facebook
+    )
+    assert len(fb_accounts) == 1
+    assert fb_accounts[0].platform == Platform.facebook
+
+
+def test_upsert_platform_account_creates(db: Session) -> None:
+    ws = _make_workspace(db)
+    integration = create_fake_integration(db, ws)
+
+    account = icrud.upsert_platform_account(
+        session=db,
+        account_in=PlatformAccountCreate(
+            integration_id=integration.id,
+            workspace_id=ws.id,
+            platform=Platform.facebook,
+            external_id="upsert-new",
+            name="New Account",
+        ),
+    )
+    assert account.external_id == "upsert-new"
+    assert account.name == "New Account"
+
+
+def test_upsert_platform_account_updates(db: Session) -> None:
+    ws = _make_workspace(db)
+    integration = create_fake_integration(db, ws)
+
+    account_in = PlatformAccountCreate(
+        integration_id=integration.id,
+        workspace_id=ws.id,
+        platform=Platform.facebook,
+        external_id="upsert-existing",
+        name="Original Name",
+    )
+    created = icrud.upsert_platform_account(session=db, account_in=account_in)
+
+    account_in.name = "Updated Name"
+    updated = icrud.upsert_platform_account(session=db, account_in=account_in)
+
+    assert updated.id == created.id  # same row
+    assert updated.name == "Updated Name"
+
+
+def test_get_integrations_for_workspace_no_platform_filter(db: Session) -> None:
+    ws = _make_workspace(db)
+    create_fake_integration(db, ws, platform=Platform.facebook)
+    create_fake_integration(
+        db, ws, platform=Platform.twitter, external_account_id="tw-2"
+    )
+
+    all_integrations = icrud.get_integrations_for_workspace(
+        session=db, workspace_id=ws.id
+    )
+    assert len(all_integrations) == 2

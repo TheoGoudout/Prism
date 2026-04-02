@@ -11,6 +11,18 @@ from app.models.user import (
     UserUpdate,
     UserUpdateMe,
 )
+from app.models.integration import (
+    Integration,
+    IntegrationCreate,
+    IntegrationPublic,
+    IntegrationsPublic,
+    IntegrationStatus,
+    Platform,
+    PlatformAccount,
+    PlatformAccountCreate,
+    PlatformAccountPublic,
+    PlatformAccountsPublic,
+)
 from app.models.workspace import (
     Workspace,
     WorkspaceCreate,
@@ -53,6 +65,17 @@ __all__ = [
     "ItemPublic",
     "ItemsPublic",
     "ItemUpdate",
+    # integration
+    "Integration",
+    "IntegrationCreate",
+    "IntegrationPublic",
+    "IntegrationsPublic",
+    "IntegrationStatus",
+    "Platform",
+    "PlatformAccount",
+    "PlatformAccountCreate",
+    "PlatformAccountPublic",
+    "PlatformAccountsPublic",
     # workspace
     "Workspace",
     "WorkspaceCreate",

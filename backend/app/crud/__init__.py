@@ -1,3 +1,19 @@
+from app.crud.integration import (
+    create_integration,
+    create_platform_account,
+    delete_integration,
+    get_access_token,
+    get_accounts_for_integration,
+    get_accounts_for_workspace,
+    get_integration,
+    get_integrations_for_workspace,
+    get_platform_account,
+    get_refresh_token,
+    mark_integration_error,
+    mark_integration_synced,
+    update_integration_tokens,
+    upsert_platform_account,
+)
 from app.crud.item import create_item
 from app.crud.user import DUMMY_HASH, authenticate, create_user, get_user_by_email, update_user
 from app.crud.workspace import (
@@ -20,6 +36,21 @@ __all__ = [
     "create_user",
     "get_user_by_email",
     "update_user",
+    # integration
+    "create_integration",
+    "create_platform_account",
+    "delete_integration",
+    "get_access_token",
+    "get_accounts_for_integration",
+    "get_accounts_for_workspace",
+    "get_integration",
+    "get_integrations_for_workspace",
+    "get_platform_account",
+    "get_refresh_token",
+    "mark_integration_error",
+    "mark_integration_synced",
+    "update_integration_tokens",
+    "upsert_platform_account",
     # workspace
     "add_member",
     "create_workspace",
