@@ -11,6 +11,19 @@ from app.models.user import (
     UserUpdate,
     UserUpdateMe,
 )
+from app.models.workspace import (
+    Workspace,
+    WorkspaceCreate,
+    WorkspaceMember,
+    WorkspaceMemberAdd,
+    WorkspaceMemberPublic,
+    WorkspaceMembersPublic,
+    WorkspaceMemberUpdate,
+    WorkspacePublic,
+    WorkspaceRole,
+    WorkspacesPublic,
+    WorkspaceUpdate,
+)
 
 # Re-export SQLModel so alembic env.py can do `from app.models import SQLModel`
 from sqlmodel import SQLModel
@@ -40,4 +53,16 @@ __all__ = [
     "ItemPublic",
     "ItemsPublic",
     "ItemUpdate",
+    # workspace
+    "Workspace",
+    "WorkspaceCreate",
+    "WorkspaceMember",
+    "WorkspaceMemberAdd",
+    "WorkspaceMemberPublic",
+    "WorkspaceMembersPublic",
+    "WorkspaceMemberUpdate",
+    "WorkspacePublic",
+    "WorkspaceRole",
+    "WorkspacesPublic",
+    "WorkspaceUpdate",
 ]
