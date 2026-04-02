@@ -1,4 +1,4 @@
-FROM python:3.10
+FROM python:3.10 AS base
 
 ENV PYTHONUNBUFFERED=1
 
@@ -42,4 +42,14 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 WORKDIR /app/backend/
 
+# ---------------------------------------------------------------------------
+# Default target — FastAPI application
+# ---------------------------------------------------------------------------
+FROM base AS default
 CMD ["fastapi", "run", "--workers", "4", "app/main.py"]
+
+# ---------------------------------------------------------------------------
+# Celery target — worker + optional beat scheduler
+# ---------------------------------------------------------------------------
+FROM base AS celery
+CMD ["celery", "-A", "app.worker.celery_app", "worker", "--loglevel=info", "--concurrency=4"]

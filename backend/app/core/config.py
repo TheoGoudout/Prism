@@ -110,6 +110,9 @@ class Settings(BaseSettings):
     # Base URL used to construct OAuth2 redirect URIs
     API_BASE_URL: str = "http://localhost:8000"
 
+    # Redis — used as Celery broker and result backend
+    REDIS_URL: str = "redis://localhost:6379/0"
+
     def _check_default_secret(self, var_name: str, value: str | None) -> None:
         if value == "changethis":
             message = (

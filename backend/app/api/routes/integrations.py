@@ -142,5 +142,6 @@ def trigger_sync(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only workspace owners and admins can trigger syncs",
         )
-    # TODO (Step 5): enqueue Celery task here
+    from app.worker.tasks.sync import sync_integration
+    sync_integration.delay(str(integration.id))
     return Message(message="Sync enqueued")

@@ -50,6 +50,31 @@ services:
     ports:
       - "5432:5432"
 
+  redis:
+    restart: "no"
+    ports:
+      - "6379:6379"
+
+  celery-worker:
+    restart: "no"
+    environment:
+      REDIS_URL: "redis://redis:6379/0"
+    develop:
+      watch:
+        - path: ./backend
+          action: sync
+          target: /app/backend
+          ignore:
+            - ./backend/.venv
+            - .venv
+        - path: ./backend/pyproject.toml
+          action: rebuild
+
+  celery-beat:
+    restart: "no"
+    environment:
+      REDIS_URL: "redis://redis:6379/0"
+
   adminer:
     restart: "no"
     ports:
