@@ -266,13 +266,18 @@ def test_token_encryption_round_trip(db: Session) -> None:
 
 
 def test_trigger_sync_accepted(client: TestClient, db: Session) -> None:
+    from unittest.mock import patch
+
     user, headers = _create_user_with_headers(client, db)
     ws = create_random_workspace(db, user)
     integration = create_fake_integration(db, ws)
 
-    r = client.post(f"{PREFIX}/{integration.id}/sync", headers=headers)
+    with patch("app.worker.tasks.sync.sync_integration") as mock_task:
+        r = client.post(f"{PREFIX}/{integration.id}/sync", headers=headers)
+
     assert r.status_code == 202
     assert r.json()["message"] == "Sync enqueued"
+    mock_task.delay.assert_called_once_with(str(integration.id))
 
 
 def test_trigger_sync_viewer_forbidden(client: TestClient, db: Session) -> None:
