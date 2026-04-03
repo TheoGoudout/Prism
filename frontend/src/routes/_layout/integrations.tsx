@@ -166,7 +166,8 @@ function IntegrationsPage() {
 
   function connectPlatform(platform: Platform) {
     if (!currentWorkspace) return
-    const url = `/api/v1/oauth/connect/${platform}?workspace_id=${currentWorkspace.id}`
+    const base = import.meta.env.VITE_API_URL ?? "http://localhost:8000"
+    const url = `${base}/api/v1/oauth/connect/${platform}?workspace_id=${currentWorkspace.id}`
     window.location.href = url
   }
 
