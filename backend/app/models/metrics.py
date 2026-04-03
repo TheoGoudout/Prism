@@ -201,6 +201,51 @@ class PostsPublic(SQLModel):
     count: int
 
 
+# ---------------------------------------------------------------------------
+# Dashboard response schemas
+# ---------------------------------------------------------------------------
+
+
+class MetricTotals(SQLModel):
+    """Aggregated metric totals over a date range."""
+
+    impressions: int = 0
+    reach: int = 0
+    views: int = 0
+    clicks: int = 0
+    engagements: int = 0
+    likes: int = 0
+    comments: int = 0
+    shares: int = 0
+    saves: int = 0
+    followers_count: int | None = None  # latest snapshot value
+    followers_gained: int = 0
+
+
+class MetricsSummary(SQLModel):
+    """Response for GET /metrics/summary."""
+
+    totals: MetricTotals
+    by_platform: dict[str, MetricTotals]
+    date_from: date_type
+    date_to: date_type
+
+
+class TimeSeriesPoint(SQLModel):
+    date: date_type
+    impressions: int = 0
+    reach: int = 0
+    views: int = 0
+    clicks: int = 0
+    engagements: int = 0
+
+
+class MetricsTimeSeries(SQLModel):
+    """Response for GET /metrics/timeseries."""
+
+    data: list[TimeSeriesPoint]
+
+
 class MetricSnapshotUpsert(SQLModel):
     """Used internally by sync tasks — not exposed via the API."""
 
