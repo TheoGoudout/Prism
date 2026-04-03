@@ -5,3 +5,7 @@ node_modules/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Environment files — contain secrets, never commit these
+.env
+frontend/.env
