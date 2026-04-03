@@ -7,7 +7,9 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { WorkspaceProvider } from "@/contexts/WorkspaceContext"
+import { Skeleton } from "@/components/ui/skeleton"
+import { NoWorkspace } from "@/components/Workspaces/NoWorkspace"
+import { WorkspaceProvider, useWorkspace } from "@/contexts/WorkspaceContext"
 import { isLoggedIn } from "@/hooks/useAuth"
 
 export const Route = createFileRoute("/_layout")({
@@ -21,9 +23,22 @@ export const Route = createFileRoute("/_layout")({
   },
 })
 
-function Layout() {
+function LayoutInner() {
+  const { workspaces, isLoading } = useWorkspace()
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Skeleton className="h-8 w-48" />
+      </div>
+    )
+  }
+
+  if (workspaces.length === 0) {
+    return <NoWorkspace />
+  }
+
   return (
-    <WorkspaceProvider>
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
@@ -38,6 +53,13 @@ function Layout() {
         <Footer />
       </SidebarInset>
     </SidebarProvider>
+  )
+}
+
+function Layout() {
+  return (
+    <WorkspaceProvider>
+      <LayoutInner />
     </WorkspaceProvider>
   )
 }

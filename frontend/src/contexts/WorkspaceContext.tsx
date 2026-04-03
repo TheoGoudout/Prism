@@ -5,6 +5,8 @@ import type { ReactNode } from "react"
 import { WorkspacesService } from "@/client"
 import type { WorkspacePublic } from "@/client"
 
+const STORAGE_KEY = "prism:workspace_id"
+
 interface WorkspaceContextValue {
   workspaces: WorkspacePublic[]
   currentWorkspace: WorkspacePublic | null
@@ -30,14 +32,16 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
   const workspaces = data?.data ?? []
 
-  // Auto-select first workspace when list loads
+  // Restore from localStorage or fall back to first workspace
   useEffect(() => {
-    if (workspaces.length > 0 && !currentWorkspace) {
-      setCurrentWorkspaceState(workspaces[0])
-    }
-  }, [workspaces, currentWorkspace])
+    if (workspaces.length === 0) return
+    const saved = localStorage.getItem(STORAGE_KEY)
+    const match = saved ? workspaces.find((w) => w.id === saved) : null
+    setCurrentWorkspaceState(match ?? workspaces[0])
+  }, [workspaces])
 
   const setCurrentWorkspace = (ws: WorkspacePublic) => {
+    localStorage.setItem(STORAGE_KEY, ws.id)
     setCurrentWorkspaceState(ws)
   }
 
