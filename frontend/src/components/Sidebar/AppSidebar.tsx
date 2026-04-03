@@ -1,4 +1,4 @@
-import { Briefcase, Home, Users } from "lucide-react"
+import { BarChart2, Briefcase, Home, Link2, Users } from "lucide-react"
 
 import { SidebarAppearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
@@ -7,13 +7,17 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
+  SidebarSeparator,
 } from "@/components/ui/sidebar"
 import useAuth from "@/hooks/useAuth"
 import { type Item, Main } from "./Main"
 import { User } from "./User"
+import { WorkspaceSelector } from "./WorkspaceSelector"
 
 const baseItems: Item[] = [
   { icon: Home, title: "Dashboard", path: "/" },
+  { icon: BarChart2, title: "Analytics", path: "/analytics" },
+  { icon: Link2, title: "Integrations", path: "/integrations" },
   { icon: Briefcase, title: "Items", path: "/items" },
 ]
 
@@ -26,9 +30,11 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="px-4 py-6 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:items-center">
+      <SidebarHeader className="px-4 py-4 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:items-center">
         <Logo variant="responsive" />
+        <WorkspaceSelector />
       </SidebarHeader>
+      <SidebarSeparator />
       <SidebarContent>
         <Main items={items} />
       </SidebarContent>

@@ -7,6 +7,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import { WorkspaceProvider } from "@/contexts/WorkspaceContext"
 import { isLoggedIn } from "@/hooks/useAuth"
 
 export const Route = createFileRoute("/_layout")({
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/_layout")({
 
 function Layout() {
   return (
+    <WorkspaceProvider>
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
@@ -36,6 +38,7 @@ function Layout() {
         <Footer />
       </SidebarInset>
     </SidebarProvider>
+    </WorkspaceProvider>
   )
 }
 

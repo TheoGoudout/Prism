@@ -9,9 +9,34 @@ export type Body_login_login_access_token = {
     client_secret?: (string | null);
 };
 
+export type ContentType = 'post' | 'reel' | 'story' | 'video' | 'tweet' | 'article' | 'short';
+
 export type HTTPValidationError = {
     detail?: Array<ValidationError>;
 };
+
+/**
+ * Safe representation — never includes raw or encrypted tokens.
+ */
+export type IntegrationPublic = {
+    id: string;
+    workspace_id: string;
+    platform: Platform;
+    status: IntegrationStatus;
+    external_account_id: string;
+    external_account_name: string;
+    external_account_avatar?: (string | null);
+    last_synced_at?: (string | null);
+    sync_error?: (string | null);
+    created_at?: (string | null);
+};
+
+export type IntegrationsPublic = {
+    data: Array<IntegrationPublic>;
+    count: number;
+};
+
+export type IntegrationStatus = 'active' | 'expired' | 'error' | 'disconnected';
 
 export type ItemCreate = {
     title: string;
@@ -40,9 +65,91 @@ export type Message = {
     message: string;
 };
 
+/**
+ * Response for GET /metrics/summary.
+ */
+export type MetricsSummary = {
+    totals: MetricTotals;
+    by_platform: {
+        [key: string]: MetricTotals;
+    };
+    date_from: string;
+    date_to: string;
+};
+
+/**
+ * Response for GET /metrics/timeseries.
+ */
+export type MetricsTimeSeries = {
+    data: Array<TimeSeriesPoint>;
+};
+
+/**
+ * Aggregated metric totals over a date range.
+ */
+export type MetricTotals = {
+    impressions?: number;
+    reach?: number;
+    views?: number;
+    clicks?: number;
+    engagements?: number;
+    likes?: number;
+    comments?: number;
+    shares?: number;
+    saves?: number;
+    followers_count?: (number | null);
+    followers_gained?: number;
+};
+
 export type NewPassword = {
     token: string;
     new_password: string;
+};
+
+export type Platform = 'facebook' | 'instagram' | 'twitter' | 'linkedin' | 'tiktok' | 'google_analytics';
+
+export type PlatformAccountPublic = {
+    id: string;
+    integration_id: string;
+    workspace_id: string;
+    platform: Platform;
+    external_id: string;
+    name: string;
+    avatar_url?: (string | null);
+    account_type?: (string | null);
+    is_active: boolean;
+    created_at?: (string | null);
+};
+
+export type PlatformAccountsPublic = {
+    data: Array<PlatformAccountPublic>;
+    count: number;
+};
+
+export type PostPublic = {
+    id: string;
+    platform_account_id: string;
+    external_id: string;
+    published_at: string;
+    content_type: ContentType;
+    text?: (string | null);
+    media_url?: (string | null);
+    permalink?: (string | null);
+    impressions?: (number | null);
+    reach?: (number | null);
+    views?: (number | null);
+    engagements?: (number | null);
+    likes?: (number | null);
+    comments?: (number | null);
+    shares?: (number | null);
+    clicks?: (number | null);
+    saves?: (number | null);
+    engagement_rate?: (number | null);
+};
+
+export type PostsPublic = {
+    data: Array<PostPublic>;
+    count: number;
 };
 
 export type PrivateUserCreate = {
@@ -50,6 +157,15 @@ export type PrivateUserCreate = {
     password: string;
     full_name: string;
     is_verified?: boolean;
+};
+
+export type TimeSeriesPoint = {
+    date: string;
+    impressions?: number;
+    reach?: number;
+    views?: number;
+    clicks?: number;
+    engagements?: number;
 };
 
 export type Token = {
@@ -113,6 +229,84 @@ export type ValidationError = {
     };
 };
 
+export type WorkspaceCreate = {
+    name: string;
+    slug?: (string | null);
+};
+
+export type WorkspaceMemberAdd = {
+    user_id: string;
+    role?: WorkspaceRole;
+};
+
+export type WorkspaceMemberPublic = {
+    user_id: string;
+    role: WorkspaceRole;
+    created_at?: (string | null);
+    user_email: string;
+    user_full_name?: (string | null);
+};
+
+export type WorkspaceMembersPublic = {
+    data: Array<WorkspaceMemberPublic>;
+    count: number;
+};
+
+export type WorkspaceMemberUpdate = {
+    role: WorkspaceRole;
+};
+
+export type WorkspacePublic = {
+    id: string;
+    name: string;
+    slug: string;
+    created_at?: (string | null);
+    role: WorkspaceRole;
+};
+
+export type WorkspaceRole = 'owner' | 'admin' | 'viewer';
+
+export type WorkspacesPublic = {
+    data: Array<WorkspacePublic>;
+    count: number;
+};
+
+export type WorkspaceUpdate = {
+    name?: (string | null);
+    slug?: (string | null);
+};
+
+export type IntegrationsListIntegrationsData = {
+    platform?: (Platform | null);
+    workspaceId: string;
+};
+
+export type IntegrationsListIntegrationsResponse = (IntegrationsPublic);
+
+export type IntegrationsGetIntegrationData = {
+    integrationId: string;
+};
+
+export type IntegrationsGetIntegrationResponse = (IntegrationPublic);
+
+export type IntegrationsDeleteIntegrationData = {
+    integrationId: string;
+};
+
+export type IntegrationsDeleteIntegrationResponse = (Message);
+
+export type IntegrationsListAccountsData = {
+    integrationId: string;
+};
+
+export type IntegrationsListAccountsResponse = (PlatformAccountsPublic);
+
+export type IntegrationsTriggerSyncData = {
+    integrationId: string;
+};
+
+export type IntegrationsTriggerSyncResponse = (Message);
+
 export type ItemsReadItemsData = {
     limit?: number;
     skip?: number;
@@ -170,6 +364,50 @@ export type LoginRecoverPasswordHtmlContentData = {
 };
 
 export type LoginRecoverPasswordHtmlContentResponse = (string);
+
+export type MetricsGetSummaryData = {
+    dateFrom?: string;
+    dateTo?: string;
+    platform?: (Platform | null);
+    workspaceId: string;
+};
+
+export type MetricsGetSummaryResponse = (MetricsSummary);
+
+export type MetricsGetTimeseriesData = {
+    dateFrom?: string;
+    dateTo?: string;
+    platform?: (Platform | null);
+    workspaceId: string;
+};
+
+export type MetricsGetTimeseriesResponse = (MetricsTimeSeries);
+
+export type MetricsGetTopPostsData = {
+    dateFrom?: string;
+    dateTo?: string;
+    limit?: number;
+    platform?: (Platform | null);
+    workspaceId: string;
+};
+
+export type MetricsGetTopPostsResponse = (PostsPublic);
+
+export type OauthConnectData = {
+    platform: Platform;
+    workspaceId: string;
+};
+
+export type OauthConnectResponse = (unknown);
+
+export type OauthCallbackData = {
+    code: string;
+    error?: (string | null);
+    platform: Platform;
+    state: string;
+};
+
+export type OauthCallbackResponse = (unknown);
 
 export type PrivateCreateUserData = {
     requestBody: PrivateUserCreate;
@@ -238,3 +476,63 @@ export type UtilsTestEmailData = {
 export type UtilsTestEmailResponse = (Message);
 
 export type UtilsHealthCheckResponse = (boolean);
+
+export type WorkspacesCreateWorkspaceData = {
+    requestBody: WorkspaceCreate;
+};
+
+export type WorkspacesCreateWorkspaceResponse = (WorkspacePublic);
+
+export type WorkspacesListWorkspacesData = {
+    limit?: number;
+    skip?: number;
+};
+
+export type WorkspacesListWorkspacesResponse = (WorkspacesPublic);
+
+export type WorkspacesGetWorkspaceData = {
+    workspaceId: string;
+};
+
+export type WorkspacesGetWorkspaceResponse = (WorkspacePublic);
+
+export type WorkspacesUpdateWorkspaceData = {
+    requestBody: WorkspaceUpdate;
+    workspaceId: string;
+};
+
+export type WorkspacesUpdateWorkspaceResponse = (WorkspacePublic);
+
+export type WorkspacesDeleteWorkspaceData = {
+    workspaceId: string;
+};
+
+export type WorkspacesDeleteWorkspaceResponse = (Message);
+
+export type WorkspacesListMembersData = {
+    workspaceId: string;
+};
+
+export type WorkspacesListMembersResponse = (WorkspaceMembersPublic);
+
+export type WorkspacesAddMemberData = {
+    requestBody: WorkspaceMemberAdd;
+    workspaceId: string;
+};
+
+export type WorkspacesAddMemberResponse = (WorkspaceMemberPublic);
+
+export type WorkspacesUpdateMemberData = {
+    requestBody: WorkspaceMemberUpdate;
+    userId: string;
+    workspaceId: string;
+};
+
+export type WorkspacesUpdateMemberResponse = (WorkspaceMemberPublic);
+
+export type WorkspacesRemoveMemberData = {
+    userId: string;
+    workspaceId: string;
+};
+
+export type WorkspacesRemoveMemberResponse = (Message);
