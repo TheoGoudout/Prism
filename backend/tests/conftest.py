@@ -7,7 +7,7 @@ from sqlmodel import Session, delete
 from app.core.config import settings
 from app.core.db import engine, init_db
 from app.main import app
-from app.models import Item, User
+from app.models import User
 from app.models.integration import Integration, PlatformAccount
 from app.models.metrics import MetricSnapshot, Post
 from app.models.workspace import Workspace, WorkspaceMember
@@ -27,7 +27,6 @@ def db() -> Generator[Session, None, None]:
         session.execute(delete(Integration))
         session.execute(delete(WorkspaceMember))
         session.execute(delete(Workspace))
-        session.execute(delete(Item))
         session.execute(delete(User))
         session.commit()
 

@@ -23,7 +23,6 @@ from app.crud.integration import (
     update_integration_tokens,
     upsert_platform_account,
 )
-from app.crud.item import create_item
 from app.crud.user import DUMMY_HASH, authenticate, create_user, get_user_by_email, update_user
 from app.crud.workspace import (
     add_member,
@@ -41,7 +40,6 @@ from app.crud.workspace import (
 __all__ = [
     "DUMMY_HASH",
     "authenticate",
-    "create_item",
     "create_user",
     "get_user_by_email",
     "update_user",

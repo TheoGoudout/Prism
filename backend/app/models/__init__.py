@@ -1,5 +1,4 @@
 from app.models.common import Message, NewPassword, Token, TokenPayload, get_datetime_utc
-from app.models.item import Item, ItemBase, ItemCreate, ItemPublic, ItemsPublic, ItemUpdate
 from app.models.user import (
     UpdatePassword,
     User,
@@ -73,13 +72,6 @@ __all__ = [
     "UsersPublic",
     "UserUpdate",
     "UserUpdateMe",
-    # item
-    "Item",
-    "ItemBase",
-    "ItemCreate",
-    "ItemPublic",
-    "ItemsPublic",
-    "ItemUpdate",
     # metrics
     "ContentType",
     "MetricSnapshot",
