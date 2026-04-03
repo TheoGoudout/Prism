@@ -1,11 +1,15 @@
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { subDays, format } from "date-fns"
 import {
   BarChart2,
+  Download,
   Eye,
   Heart,
+  Loader2,
   MousePointerClick,
+  Sparkles,
+  TrendingDown,
   TrendingUp,
   Users,
 } from "lucide-react"
@@ -20,8 +24,10 @@ import {
   YAxis,
 } from "recharts"
 
-import { MetricsService } from "@/client"
+import { AiService, MetricsService } from "@/client"
+import type { Insight } from "@/client"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -82,6 +88,117 @@ function KpiCard({ title, value, icon: Icon, loading }: KpiCardProps) {
           <Skeleton className="h-7 w-24" />
         ) : (
           <p className="text-2xl font-bold">{value}</p>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+// ---- Insights panel ---------------------------------------------------------
+
+function insightIcon(type: Insight["type"]) {
+  if (type === "positive") return <TrendingUp className="size-4 text-green-500 shrink-0 mt-0.5" />
+  if (type === "negative") return <TrendingDown className="size-4 text-destructive shrink-0 mt-0.5" />
+  return <Sparkles className="size-4 text-muted-foreground shrink-0 mt-0.5" />
+}
+
+interface InsightsPanelProps {
+  workspaceId: string
+  dateFrom: string
+  dateTo: string
+}
+
+function InsightsPanel({ workspaceId, dateFrom, dateTo }: InsightsPanelProps) {
+  const insightsMut = useMutation({
+    mutationFn: () =>
+      AiService.generateInsights({
+        requestBody: { workspace_id: workspaceId, date_from: dateFrom, date_to: dateTo },
+      }),
+  })
+
+  const reportMut = useMutation({
+    mutationFn: () =>
+      AiService.generateReport({
+        requestBody: { workspace_id: workspaceId, date_from: dateFrom, date_to: dateTo },
+      }),
+    onSuccess: (data) => {
+      // Trigger a markdown file download
+      const blob = new Blob([data.report], { type: "text/markdown" })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `report-${dateFrom}-${dateTo}.md`
+      a.click()
+      URL.revokeObjectURL(url)
+    },
+  })
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-base flex items-center gap-2">
+          <Sparkles className="size-4" />
+          AI Insights
+        </CardTitle>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => insightsMut.mutate()}
+            disabled={insightsMut.isPending || reportMut.isPending}
+          >
+            {insightsMut.isPending ? (
+              <Loader2 className="mr-2 size-4 animate-spin" />
+            ) : (
+              <Sparkles className="mr-2 size-4" />
+            )}
+            Generate insights
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => reportMut.mutate()}
+            disabled={insightsMut.isPending || reportMut.isPending}
+          >
+            {reportMut.isPending ? (
+              <Loader2 className="mr-2 size-4 animate-spin" />
+            ) : (
+              <Download className="mr-2 size-4" />
+            )}
+            Download report
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {!insightsMut.data && !insightsMut.isPending && (
+          <p className="text-sm text-muted-foreground text-center py-4">
+            Click "Generate insights" to get AI-powered analysis of your metrics.
+          </p>
+        )}
+        {insightsMut.isPending && (
+          <div className="space-y-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-14 w-full" />
+            ))}
+          </div>
+        )}
+        {insightsMut.isError && (
+          <p className="text-sm text-destructive text-center py-4">
+            Failed to generate insights. Please try again.
+          </p>
+        )}
+        {insightsMut.data && (
+          <ul className="space-y-3">
+            {insightsMut.data.insights.map((insight, i) => (
+              <li key={i} className="flex gap-3 text-sm">
+                {insightIcon(insight.type)}
+                <div>
+                  <p className="font-medium">{insight.title}</p>
+                  <p className="text-muted-foreground">{insight.body}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
         )}
       </CardContent>
     </Card>
@@ -186,6 +303,13 @@ function AnalyticsPage() {
           loading={summaryQ.isLoading}
         />
       </div>
+
+      {/* AI Insights */}
+      <InsightsPanel
+        workspaceId={currentWorkspace.id}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+      />
 
       {/* Timeseries chart */}
       <Card>
