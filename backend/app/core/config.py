@@ -113,6 +113,15 @@ class Settings(BaseSettings):
     # Redis — used as Celery broker and result backend
     REDIS_URL: str = "redis://localhost:6379/0"
 
+    # AI / LangChain — set AI_PROVIDER to the desired backend
+    # LangSmith tracing is enabled by setting LANGCHAIN_TRACING_V2=true and
+    # LANGCHAIN_API_KEY in the environment (LangChain reads these automatically).
+    AI_PROVIDER: Literal["openai", "anthropic", "google"] = "openai"
+    AI_MODEL: str = "gpt-4o-mini"
+    OPENAI_API_KEY: str = ""
+    ANTHROPIC_API_KEY: str = ""
+    GOOGLE_API_KEY: str = ""
+
     def _check_default_secret(self, var_name: str, value: str | None) -> None:
         if value == "changethis":
             message = (
