@@ -234,7 +234,7 @@ function Dashboard() {
               <Link2 className="size-8" />
               <p className="text-sm">No platforms connected yet.</p>
               <Button asChild variant="outline" size="sm">
-                <Link to="/integrations">Connect a platform</Link>
+                <Link to="/integrations" search={{ connected: undefined, error: undefined }}>Connect a platform</Link>
               </Button>
             </div>
           ) : (
@@ -256,7 +256,7 @@ function Dashboard() {
           </Link>
         </Button>
         <Button asChild variant="outline" size="sm">
-          <Link to="/integrations">
+          <Link to="/integrations" search={{ connected: undefined, error: undefined }}>
             <Link2 className="mr-2 size-4" />
             Manage integrations
           </Link>

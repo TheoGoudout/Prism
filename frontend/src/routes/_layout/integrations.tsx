@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, useSearch } from "@tanstack/react-router"
 import { formatDistanceToNow } from "date-fns"
 import { Link2, Loader2, Plus, RefreshCw, Trash2 } from "lucide-react"
 
-import { IntegrationsService } from "@/client"
+import { IntegrationsService, OauthService } from "@/client"
 import type { IntegrationPublic, Platform } from "@/client"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -26,9 +26,14 @@ import {
 import { useWorkspace } from "@/contexts/WorkspaceContext"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
+import { useEffect } from "react"
 
 export const Route = createFileRoute("/_layout/integrations")({
   component: IntegrationsPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    connected: search.connected === "1" ? ("1" as const) : undefined,
+    error: typeof search.error === "string" ? search.error : undefined,
+  }),
   head: () => ({
     meta: [{ title: "Integrations - Prism" }],
   }),
@@ -154,6 +159,19 @@ function IntegrationRow({ integration }: { integration: IntegrationPublic }) {
 
 function IntegrationsPage() {
   const { currentWorkspace } = useWorkspace()
+  const { connected, error: oauthError } = useSearch({ from: "/_layout/integrations" })
+  const { showSuccessToast, showErrorToast } = useCustomToast()
+  const queryClient = useQueryClient()
+
+  useEffect(() => {
+    if (connected) {
+      showSuccessToast("Platform connected successfully")
+      queryClient.invalidateQueries({ queryKey: ["integrations"] })
+    }
+    if (oauthError) {
+      showErrorToast(oauthError)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const integrationsQ = useQuery({
     queryKey: ["integrations", currentWorkspace?.id],
@@ -164,11 +182,14 @@ function IntegrationsPage() {
     enabled: !!currentWorkspace,
   })
 
-  function connectPlatform(platform: Platform) {
+  async function connectPlatform(platform: Platform) {
     if (!currentWorkspace) return
-    const base = import.meta.env.VITE_API_URL ?? "http://localhost:8000"
-    const url = `${base}/api/v1/oauth/connect/${platform}?workspace_id=${currentWorkspace.id}`
-    window.location.href = url
+    const resp = await OauthService.connect({
+      platform,
+      workspaceId: currentWorkspace.id,
+    })
+    const { authorization_url } = resp as { authorization_url: string }
+    window.location.href = authorization_url
   }
 
   if (!currentWorkspace) {

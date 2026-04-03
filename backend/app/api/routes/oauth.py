@@ -38,12 +38,12 @@ def _redirect_uri(platform: Platform) -> str:
 
 
 def _frontend_success_url(workspace_id: str) -> str:
-    return f"{settings.FRONTEND_HOST}/workspaces/{workspace_id}/integrations?connected=1"
+    return f"{settings.FRONTEND_HOST}/integrations?connected=1"
 
 
 def _frontend_error_url(workspace_id: str, error: str) -> str:
     params = urlencode({"error": error})
-    return f"{settings.FRONTEND_HOST}/workspaces/{workspace_id}/integrations?{params}"
+    return f"{settings.FRONTEND_HOST}/integrations?{params}"
 
 
 # ---------------------------------------------------------------------------
