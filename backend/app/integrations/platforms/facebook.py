@@ -26,6 +26,14 @@ logger = logging.getLogger(__name__)
 
 GRAPH_API = "https://graph.facebook.com/v19.0"
 
+
+def _parse_dt(s: str) -> datetime:
+    """Parse Graph API datetime strings (handles 'Z' and '+0000'-style offsets)."""
+    s = s.replace("Z", "+00:00")
+    if len(s) >= 5 and s[-5] in "+-" and ":" not in s[-5:]:
+        s = s[:-2] + ":" + s[-2:]
+    return datetime.fromisoformat(s)
+
 _PAGE_METRICS = ",".join(
     [
         "page_impressions",
@@ -107,9 +115,7 @@ def _sync_page_insights(
         metric_name: str = entry["name"]
         for val_item in entry.get("values", []):
             try:
-                d = datetime.fromisoformat(
-                    val_item["end_time"].replace("Z", "+00:00")
-                ).date()
+                d = _parse_dt(val_item["end_time"]).date()
             except (KeyError, ValueError):
                 continue
             by_date.setdefault(d, {})[metric_name] = val_item["value"]
@@ -169,9 +175,7 @@ def _sync_page_posts(
             logger.warning("Could not fetch insights for post %s: %s", post_id, exc)
 
         try:
-            published_at = datetime.fromisoformat(
-                post_data["created_time"].replace("Z", "+00:00")
-            )
+            published_at = _parse_dt(post_data["created_time"])
         except (KeyError, ValueError):
             logger.warning("Skipping post %s: missing or invalid created_time", post_id)
             continue
