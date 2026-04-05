@@ -24,6 +24,14 @@ logger = logging.getLogger(__name__)
 
 GRAPH_API = "https://graph.facebook.com/v19.0"
 
+
+def _parse_dt(s: str) -> datetime:
+    """Parse Graph API datetime strings (handles 'Z' and '+0000'-style offsets)."""
+    s = s.replace("Z", "+00:00")
+    if len(s) >= 5 and s[-5] in "+-" and ":" not in s[-5:]:
+        s = s[:-2] + ":" + s[-2:]
+    return datetime.fromisoformat(s)
+
 _ACCOUNT_METRICS = ",".join(
     [
         "impressions",
@@ -143,9 +151,7 @@ def _sync_account_insights(
         metric_name: str = entry["name"]
         for val_item in entry.get("values", []):
             try:
-                d = datetime.fromisoformat(
-                    val_item["end_time"].replace("Z", "+00:00")
-                ).date()
+                d = _parse_dt(val_item["end_time"]).date()
             except (KeyError, ValueError):
                 continue
             by_date.setdefault(d, {})[metric_name] = val_item["value"]
@@ -211,9 +217,7 @@ def _sync_media(
             logger.warning("Could not fetch insights for media %s: %s", media_id, exc)
 
         try:
-            published_at = datetime.fromisoformat(
-                item["timestamp"].replace("Z", "+00:00")
-            )
+            published_at = _parse_dt(item["timestamp"])
         except (KeyError, ValueError):
             logger.warning("Skipping media %s: missing or invalid timestamp", media_id)
             continue
